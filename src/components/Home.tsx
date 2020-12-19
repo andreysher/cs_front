@@ -2,10 +2,10 @@ import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootStore } from '../store';
 import Tree from './tree/Tree';
-import {useEffect, useState} from "react";
-import {get_list} from "../actions/models";
-import {buildTree} from "../utils";
-import {TList} from "../actions/types";
+import { useEffect, useState } from "react";
+import { get_list } from "../actions/models";
+import { buildTree } from "../utils";
+import { TList } from "../actions/types";
 import { FormEvent } from 'react';
 
 
@@ -21,42 +21,101 @@ const Home: React.FunctionComponent<IHomeProps> = (props) => {
     const dispatch = useDispatch()
     const list = useSelector((state: RootStore) => state.modelReducer.lists)
     const [selected, set_selected] = useState<TList>()
-    const [search_res, set_search_res] = useState<TList[]>()
+    const [search_res, set_search_res] = useState<TList[]>([])
+    const [selectedChildren, setSelectedChildren] = useState<TList[]>([])
+
+    const [sidePanel, setSidePanel] = useState(false)
+    const [searchPanel, setSearchPanel] = useState(false)
+
     useEffect(() => {
         dispatch(get_list())
     }, [])
+
     useEffect(() => {
-        console.log(list)
+        if (list.length === 0)
+            return null
+        set_selected(list[0])
+
     }, [list])
+
     useEffect(() => {
-        console.log(search_res)
-    }, [search_res])
-    return <>
-        <Tree tree_data={buildTree(list)} onClick={(element_id: number) => {
+        if (selected === undefined)
+            return null
+        setSelectedChildren(list.filter(x => x.master === selected.id || x.id === selected.master))
+    }, [selected])
+
+
+    const renderTree = () => {
+        return <Tree tree_data={buildTree(list)} onClick={(element_id: number) => {
             set_selected(list.find((x: TList) => x.id === element_id))
         }} />
+    }
 
-        {selected && <div> <h1>{selected.name}</h1>
-            <p> {selected.text} </p>
+    const onChange = (e) => {
+        var input_content = e.target.value
+        var input_words = input_content.split(' ')
+        set_search_res(list.filter((x: TList) => {
+            var accepted = false
+            input_words.map(word => {
+                if (x.text.includes(word))
+                    accepted = true
+            })
+            return accepted
+        }))
+    }
+
+    const renderSearchResult = () => {
+        return search_res.map((x: TList) => {
+            return <p onClick={() => set_selected(x)}> {x.name} </p>
+        })
+    }
+
+    const renderChildren = () => {
+        return selectedChildren.map(e => {
+            return <p onClick={() => set_selected(e)}>
+                {e.name}
+            </p>
+        })
+    }
+
+
+
+
+    return <>
+        {sidePanel && <div className='panel'>
+            <button id='close-side-pannel' onClick={() => setSidePanel(false)}>X</button>
+            {renderTree()}
         </div>}
 
-        <div><input onChange={e => {
-            var input_content = e.target.value
-            var input_words = input_content.split(' ')
-            set_search_res(list.filter((x: TList) => {
-                var accepted = false
-                input_words.map(word => {
-                    if (x.text.includes(word))
-                        accepted = true
-                })
-                return accepted
-            }))
-        }}></input ></div>
+        <div className='selected'>
+            {selected && <div> <h1>{selected.name}</h1>
+                {selected.text.split('\n').filter(y => y.length > 2).map(t => {
+                    return <p> {t} </p>
+                })}
 
-    <div>{search_res && search_res.map((x:TList) => {
-        return <p onClick={() => set_selected(x)}> {x.name} </p>
-    })}</div>
-</>
+            </div>}
+        </div>
+
+        {searchPanel && <div className='search'>
+            <button onClick={() => setSearchPanel(false)}>X</button>
+            <input onChange={onChange}></input >
+
+            <div className='search-result'>
+                {search_res && renderSearchResult()}
+            </div>
+        </div>}
+
+        {selectedChildren.length > 0 && <div className='children'>
+            <p>Связанные термины:</p>
+            <div className='terms'>
+                {renderChildren()}
+            </div>
+        </div>}
+
+
+        {!sidePanel && <button id='open-side-pannel1' onClick={() => setSidePanel(true)}>Открыть дерево</button>}
+        {!searchPanel && <button id='open-side-pannel2' onClick={() => setSearchPanel(true)}>Открыть поиск</button>}
+    </>
 };
 
 export default Home;
