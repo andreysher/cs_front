@@ -27,6 +27,8 @@ const Home: React.FunctionComponent<IHomeProps> = (props) => {
     const [sidePanel, setSidePanel] = useState(false)
     const [searchPanel, setSearchPanel] = useState(false)
 
+
+    const styleClick = { cursor: 'pointer' }
     useEffect(() => {
         dispatch(get_list())
     }, [])
@@ -66,13 +68,13 @@ const Home: React.FunctionComponent<IHomeProps> = (props) => {
 
     const renderSearchResult = () => {
         return search_res.map((x: TList) => {
-            return <p onClick={() => set_selected(x)}> {x.name} </p>
+            return <p style={styleClick} onClick={() => set_selected(x)}> {x.name} </p>
         })
     }
 
     const renderChildren = () => {
         return selectedChildren.map(e => {
-            return <p onClick={() => set_selected(e)}>
+            return <p style={styleClick} onClick={() => set_selected(e)}>
                 {e.name}
             </p>
         })

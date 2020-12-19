@@ -15,9 +15,8 @@ interface ITreeNodeProps {
 }
 
 const TreeNode: React.FunctionComponent<ITreeNodeProps> = (props) => {
-
     const [isHidden, setIsHidden] = React.useState(props.is_hidden)
-    const style = { marginLeft: (props.level * 10) + 'px' }
+    const style = { cursor: 'pointer', marginLeft: (props.level * 10) + 'px' }
 
 
     return <>
